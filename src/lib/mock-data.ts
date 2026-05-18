@@ -63,7 +63,22 @@ export const mockCategories: Category[] = [
 ];
 
 export const mockOrders: Order[] = [
-  { id: "ord_1", customer_name: "Maya Chen", delivery_address: "42 Market St", phone_number: "+1 555 0199", quantity: 2, product_id: "prod_1", delivered: false, created_at: now, updated_at: now },
-  { id: "ord_2", customer_name: "Jon Bell", delivery_address: "10 Pine Ave", phone_number: "+1 555 0144", quantity: 1, product_id: "prod_2", delivered: true, created_at: now, updated_at: now },
-  { id: "ord_3", customer_name: "Sara Lane", delivery_address: "88 Sunset Blvd", phone_number: "+1 555 0181", quantity: 3, product_id: "prod_1", delivered: false, created_at: now, updated_at: now }
+  {
+    id: "ord_1", shop_id: "urban-fit", shop_name: "Urban Fit", status: "pending",
+    customer_info: { name: "Maya Chen", phone: "+1 555 0199", city: "San Francisco", delivery_address: "42 Market St" },
+    items: [{ product_id: "prod_1", product_name: "Aero Runner Sneakers", quantity: 2, unit_price: 129, total_price: 258 }],
+    total_price: 258, created_at: now, updated_at: now
+  },
+  {
+    id: "ord_2", shop_id: "urban-fit", shop_name: "Urban Fit", status: "delivered",
+    customer_info: { name: "Jon Bell", phone: "+1 555 0144", city: "Brooklyn", delivery_address: "10 Pine Ave" },
+    items: [{ product_id: "prod_2", product_name: "Cloud Cotton Hoodie", quantity: 1, unit_price: 89, total_price: 89 }],
+    total_price: 89, created_at: now, updated_at: now
+  },
+  {
+    id: "ord_3", shop_id: "luna-home", shop_name: "Luna Home", status: "processing",
+    customer_info: { name: "Sara Lane", phone: "+1 555 0181", city: "Austin", delivery_address: "88 Sunset Blvd" },
+    items: [{ product_id: "prod_1", product_name: "Aero Runner Sneakers", quantity: 3, unit_price: 129, total_price: 387 }],
+    total_price: 387, created_at: now, updated_at: now
+  }
 ];

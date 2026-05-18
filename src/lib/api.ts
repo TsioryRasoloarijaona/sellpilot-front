@@ -8,6 +8,7 @@ import type {
   ChatResponse,
   Order,
   OrderPayload,
+  OrderStatus,
   Product,
   ProductCreatePayload,
   ProductPayload,
@@ -115,6 +116,10 @@ export const ordersApi = {
   },
   update: async (shopId: string, orderId: string, payload: OrderPayload) => {
     const { data } = await api.patch<Order>(`/api/shops/${shopId}/orders/${orderId}`, payload);
+    return data;
+  },
+  updateStatus: async (shopId: string, orderId: string, status: OrderStatus) => {
+    const { data } = await api.patch<Order>(`/api/shops/${shopId}/orders/${orderId}/status`, { status });
     return data;
   }
 };

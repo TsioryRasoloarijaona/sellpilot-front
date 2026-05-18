@@ -46,14 +46,32 @@ export type Category = {
   updated_at: string;
 };
 
+export type CustomerInfo = {
+  name: string;
+  phone: string;
+  city: string;
+  delivery_address: string;
+};
+
+export type OrderItem = {
+  product_id: string;
+  product_name?: string | null;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+};
+
+export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
+
 export type Order = {
   id: string;
-  customer_name: string;
-  delivery_address: string;
-  phone_number: string;
-  quantity: number;
-  product_id: string;
-  delivered: boolean;
+  session_id?: string | null;
+  shop_id: string;
+  shop_name?: string | null;
+  items: OrderItem[];
+  total_price: number;
+  status: OrderStatus;
+  customer_info: CustomerInfo;
   created_at: string;
   updated_at: string;
 };
@@ -95,3 +113,4 @@ export type ProductPayload = ProductCreatePayload & {
 export type CategoryPayload = Pick<Category, "name">;
 
 export type OrderPayload = Partial<Omit<Order, "id" | "created_at" | "updated_at">>;
+export type OrderStatusPayload = { status: OrderStatus };
