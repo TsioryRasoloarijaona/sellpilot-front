@@ -38,14 +38,16 @@ export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLab
 export function Field({
   label,
   error,
-  children
+  children,
+  className
 }: {
   label: string;
   error?: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2", className)}>
       <Label>{label}</Label>
       {children}
       {error ? <p className="text-xs text-red-500">{error}</p> : null}

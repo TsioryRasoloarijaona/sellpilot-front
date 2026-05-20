@@ -1,7 +1,9 @@
 import axios from "axios";
 import type {
+  AssistantConversation,
+  AssistantConversationWithMessages,
+  AssistantMessage,
   AuthResponse,
-  Owner,
   Category,
   CategoryPayload,
   ChatRequest,
@@ -9,9 +11,12 @@ import type {
   Order,
   OrderPayload,
   OrderStatus,
+  Owner,
+  OwnerChatResponse,
   Product,
   ProductCreatePayload,
   ProductPayload,
+  PublicOrderCreate,
   Shop,
   ShopPayload
 } from "./types";
@@ -127,6 +132,48 @@ export const ordersApi = {
 export const chatApi = {
   send: async (payload: ChatRequest) => {
     const { data } = await api.post<ChatResponse>("/api/chat", payload);
+    return data;
+  }
+};
+
+export const assistantApi = {
+  listConversations: async () => {
+    const { data } = await api.get<AssistantConversation[]>("/api/assistant/conversations");
+    return data;
+  },
+  createConversation: async (payload: { title?: string; shop_id?: string } = {}) => {
+    const { data } = await api.post<AssistantConversation>("/api/assistant/conversations", payload);
+    return data;
+  },
+  getConversation: async (id: string) => {
+    const { data } = await api.get<AssistantConversationWithMessages>(`/api/assistant/conversations/${id}`);
+    return data;
+  },
+  updateConversation: async (id: string, payload: { title: string }) => {
+    const { data } = await api.patch<AssistantConversation>(`/api/assistant/conversations/${id}`, payload);
+    return data;
+  },
+  deleteConversation: (id: string) => api.delete(`/api/assistant/conversations/${id}`),
+  appendMessage: async (conversationId: string, payload: { role: "owner" | "assistant"; content: string }) => {
+    const { data } = await api.post<AssistantMessage>(`/api/assistant/conversations/${conversationId}/messages`, payload);
+    return data;
+  }
+};
+
+export const ownerChatApi = {
+  send: async (message: string) => {
+    const { data } = await api.post<OwnerChatResponse>("/api/owner/chat", { message });
+    return data;
+  }
+};
+
+export const publicOrdersApi = {
+  create: async (shopId: string, payload: PublicOrderCreate) => {
+    const { data } = await api.post<Record<string, unknown>>(`/api/shops/${shopId}/orders/public`, payload);
+    return data;
+  },
+  listBySession: async (shopId: string, sessionId: string) => {
+    const { data } = await api.get<{ shop: Shop; orders: Order[] }>(`/api/shops/${shopId}/orders/session/${sessionId}`);
     return data;
   }
 };

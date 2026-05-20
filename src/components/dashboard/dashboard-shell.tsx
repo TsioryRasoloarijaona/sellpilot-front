@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Boxes, ChartNoAxesCombined, LayoutDashboard, LogOut, Menu, Package, Search, Settings, ShoppingBag, Store, Tags, X } from "lucide-react";
+import { Bell, Bot, Boxes, ChartNoAxesCombined, LayoutDashboard, LogOut, Menu, Package, Search, Settings, ShoppingBag, Store, Tags, X } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { authApi } from "@/lib/api";
@@ -19,6 +19,7 @@ const nav = [
   { href: "/dashboard/categories", label: "Categories", icon: Tags },
   { href: "/dashboard/orders", label: "Orders", icon: ShoppingBag },
   { href: "/dashboard/analytics", label: "Analytics", icon: ChartNoAxesCombined },
+  { href: "/dashboard/assistant", label: "AI Assistant", icon: Bot },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
 ];
 

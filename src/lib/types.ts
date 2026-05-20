@@ -76,6 +76,17 @@ export type Order = {
   updated_at: string;
 };
 
+export type PublicOrderCreate = {
+  product_id: string;
+  quantity: number;
+  customer_name: string;
+  customer_phone: string;
+  city: string;
+  address: string;
+  payment_method?: string | null;
+  session_id?: string | null;
+};
+
 export type ChatRequest = {
   message: string;
   session_id: string;
@@ -114,3 +125,34 @@ export type CategoryPayload = Pick<Category, "name">;
 
 export type OrderPayload = Partial<Omit<Order, "id" | "created_at" | "updated_at">>;
 export type OrderStatusPayload = { status: OrderStatus };
+
+export type AssistantMessage = {
+  id: string;
+  conversation_id: string;
+  role: "owner" | "assistant";
+  content: string;
+  created_at: string;
+};
+
+export type AssistantConversation = {
+  id: string;
+  owner_id: string;
+  shop_id: string | null;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AssistantConversationWithMessages = AssistantConversation & {
+  messages: AssistantMessage[];
+};
+
+export type OwnerChatResponse = {
+  response: string;
+  intent?: string | null;
+  selected_shop_id?: string | null;
+  selected_shop_name?: string | null;
+  current_shop_id?: string | null;
+  current_shop_name?: string | null;
+  steps?: string[];
+};
