@@ -31,12 +31,17 @@ There is no test suite configured.
 /dashboard/orders        → Orders manager
 /dashboard/categories    → Categories manager
 /dashboard/analytics     → Charts (Recharts)
+/dashboard/assistant     → Owner AI chat (conversation history + AI replies via ownerChatApi)
 /dashboard/settings      → Owner settings
 ```
 
 ### Data Layer
 
-**API** (`src/lib/api.ts`): Single Axios instance pointed at `NEXT_PUBLIC_API_URL` (default `localhost:8000`). A request interceptor injects the Bearer token from `sessionStorage`. Exported client groups: `authApi`, `shopsApi`, `productsApi`, `categoriesApi`, `ordersApi`, `chatApi`, `publicOrdersApi`.
+**API** (`src/lib/api.ts`): Single Axios instance pointed at `NEXT_PUBLIC_API_URL` (default `localhost:8000`). A request interceptor injects the Bearer token from `sessionStorage`. Exported client groups: `authApi`, `shopsApi`, `productsApi`, `categoriesApi`, `ordersApi`, `chatApi`, `publicOrdersApi`, `assistantApi`, `ownerChatApi`.
+
+- `chatApi` — public customer chat (`POST /api/chat`)
+- `ownerChatApi` — owner AI assistant one-shot send (`POST /api/owner/chat`)
+- `assistantApi` — owner conversation CRUD + message append (`/api/assistant/conversations/**`)
 
 **Server state**: React Query with 30 s staleTime, 1 retry, no refetch-on-window-focus. Mutations call `queryClient.invalidateQueries` to refresh caches.
 
@@ -45,7 +50,8 @@ There is no test suite configured.
 ### Auth Flow
 
 1. Login/register → API → store token in sessionStorage + `SameSite=Lax` cookie + Zustand
-2. `middleware.ts` guards `/dashboard/**`: redirects unauthenticated requests to `/auth/login?next=<path>`
+2. `middleware.ts` guards `/dashboard/**`: redirects unauthenticated requests to `/auth/.
+login?next=<path>`
 3. After login, redirect to `?next` param or `/dashboard`
 
 ### Component Conventions
@@ -56,3 +62,11 @@ There is no test suite configured.
 - **`src/lib/types.ts`**: canonical TypeScript types for all domain models.
 - **`src/lib/mock-data.ts`**: fallback data used when API is unavailable.
 - Toast notifications via **Sonner**; theming via **next-themes** (light/dark).
+
+### pip-mascot Web Component
+
+`<pip-mascot>` is a self-contained Web Component defined in `public/pip-mascot.js` (loaded via `<script>` in the layout). TypeScript types are in `src/pip-mascot.d.ts`. Use it anywhere in JSX with `suppressHydrationWarning` to silence SSR mismatches.
+
+Poses: `wave` (greeting/idle), `think` (loading), `point` (recommendation), `celebrate` (success), `sleep` (empty state), `oops` (error).
+
+Key attributes: `pose`, `size` (px), `speed` (0.3–3 multiplier), `no-shadow` (boolean), `autocycle` (ms).

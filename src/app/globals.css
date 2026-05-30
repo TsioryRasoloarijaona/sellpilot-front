@@ -2,34 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Color tokens ── */
 :root {
-  --background: 220 33% 98%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --muted: 220 18% 94%;
-  --muted-foreground: 220 9% 46%;
-  --border: 220 16% 88%;
-  --input: 220 16% 88%;
-  --ring: 246 88% 66%;
-  --primary: 246 88% 66%;
-  --primary-foreground: 0 0% 100%;
+  --background:        0 0% 97.5%;
+  --foreground:        224 71% 9%;
+  --card:              0 0% 100%;
+  --card-foreground:   224 71% 9%;
+  --muted:             220 16% 94%;
+  --muted-foreground:  220 9%  47%;
+  --border:            220 16% 90%;
+  --input:             220 16% 90%;
+  --ring:              246 83% 60%;
+  --primary:           246 83% 60%;
+  --primary-foreground:0 0% 100%;
 }
 
 .dark {
-  --background: 225 24% 7%;
-  --foreground: 214 32% 91%;
-  --card: 224 26% 11%;
-  --card-foreground: 214 32% 91%;
-  --muted: 224 18% 16%;
-  --muted-foreground: 218 12% 66%;
-  --border: 224 18% 20%;
-  --input: 224 18% 20%;
-  --ring: 246 88% 70%;
-  --primary: 246 88% 70%;
-  --primary-foreground: 225 24% 7%;
+  --background:        222 47% 6%;
+  --foreground:        213 31% 91%;
+  --card:              222 40% 9%;
+  --card-foreground:   213 31% 91%;
+  --muted:             222 32% 14%;
+  --muted-foreground:  218 14% 60%;
+  --border:            222 32% 17%;
+  --input:             222 32% 17%;
+  --ring:              246 78% 68%;
+  --primary:           246 78% 68%;
+  --primary-foreground:222 47% 6%;
 }
 
+/* ── Base ── */
 * {
   border-color: hsl(var(--border));
 }
@@ -40,34 +42,63 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 30rem),
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 34rem),
-    hsl(var(--background));
+  background: hsl(var(--background));
   color: hsl(var(--foreground));
   font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Selection ── */
 ::selection {
-  background: rgba(99, 102, 241, 0.24);
+  background: hsla(246, 83%, 60%, 0.2);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Brand utilities ── */
+.gradient-brand {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 52%, #db2777 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .glass {
-  background: color-mix(in srgb, hsl(var(--card)) 78%, transparent);
-  backdrop-filter: blur(18px);
+  background: color-mix(in srgb, hsl(var(--card)) 80%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.scrollbar-hide {
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* ── Landing hero subtle gradient background ── */
+.hero-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, hsla(246, 83%, 60%, 0.12), transparent),
+    radial-gradient(ellipse 60% 50% at 80% 20%, hsla(280, 70%, 60%, 0.08), transparent),
+    hsl(var(--background));
 }

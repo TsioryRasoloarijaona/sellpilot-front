@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>&lt;pip-mascot&gt; — drop-in demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{ color-scheme: dark; --ink:#0B0B14; }
+  html,body{ margin:0; background:#07060f; color:#e9e9f3; font-family:"Plus Jakarta Sans", system-ui, sans-serif; }
+  .wrap{
+    min-height:100vh;
+    background:
+      radial-gradient(50% 40% at 30% 0%, rgba(99,102,241,.20), transparent 60%),
+      radial-gradient(50% 40% at 80% 30%, rgba(236,72,153,.16), transparent 60%),
+      #07060f;
+    padding: 56px 6vw 80px;
+  }
+  header{ display:flex; flex-direction:column; gap:10px; max-width:880px; margin: 0 auto 36px; }
+  h1{ margin:0; font-size:34px; letter-spacing:-0.02em; font-weight:800; }
+  h1 .tag{
+    margin-left:10px; font-family:"JetBrains Mono", monospace; font-size:13px; font-weight:600;
+    background:linear-gradient(135deg,#6366F1,#8B5CF6,#EC4899);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  p.lead{ margin:0; color:#9a9ab2; font-size:15px; max-width:640px; line-height:1.55; }
+  .mono{ font-family:"JetBrains Mono", monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#7a7a95; }
+
+  section{ max-width: 1080px; margin: 0 auto 48px; }
+  section > .head{
+    display:flex; align-items:baseline; gap:14px; margin-bottom:14px;
+  }
+  section > .head h2{ margin:0; font-size:18px; letter-spacing:-0.01em; }
+  section > .head .num{
+    width:26px;height:26px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#6366F1,#EC4899);
+    font-family:"JetBrains Mono", monospace; font-size:12px; font-weight:700;
+  }
+
+  /* poses grid */
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:16px;
+  }
+  .card{
+    background:#11111c;
+    border-radius:16px;
+    padding:18px 16px 14px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .card pip-mascot{ width:140px; height:140px; }
+  .card .name{ font-weight:700; font-size:14px; margin-top:4px; }
+  .card .attr{ font-family:"JetBrains Mono", monospace; font-size:11px; color:#7a7a95; }
+
+  /* hero card */
+  .hero{
+    display:grid; grid-template-columns: 1fr 1fr; gap:24px;
+    background:#0F0F1A;
+    border-radius:24px;
+    padding:32px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    align-items:center;
+  }
+  .hero-left{ display:flex; align-items:center; justify-content:center; }
+  .hero pip-mascot#hero{ width:280px; height:280px; }
+  .hero-right{ display:flex; flex-direction:column; gap:14px; }
+  .hero-right h3{ margin:0; font-size:22px; letter-spacing:-0.01em; }
+  .controls{
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .btn{
+    appearance:none; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:#fff;
+    padding:8px 12px; border-radius:99px; cursor:pointer;
+    font-family:"JetBrains Mono", monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+  }
+  .btn.active{ background:linear-gradient(135deg,#6366F1,#8B5CF6,#EC4899); border-color:transparent; }
+  .btn:hover{ background:rgba(255,255,255,.08); }
+  .btn.active:hover{ background:linear-gradient(135deg,#6366F1,#8B5CF6,#EC4899); }
+
+  /* slider */
+  .row{ display:flex; align-items:center; gap:10px; }
+  .row label{ font-family:"JetBrains Mono", monospace; font-size:11px; color:#9a9ab2; min-width:80px; }
+  input[type=range]{ width:200px; accent-color:#8B5CF6; }
+  .row .val{ font-family:"JetBrains Mono", monospace; font-size:11px; color:#fff; min-width:36px; }
+
+  /* code blocks */
+  pre{
+    background:#0a0a14; border-radius:14px; padding:16px 18px;
+    overflow-x:auto; font-family:"JetBrains Mono", monospace; font-size:12.5px; line-height:1.6;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    color:#d9d9ee;
+    margin:8px 0;
+  }
+  pre .k{ color:#c4b5fd; }
+  pre .s{ color:#fda4af; }
+  pre .c{ color:#6b6b80; }
+  pre .t{ color:#f9a8d4; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:760px){
+    .hero{ grid-template-columns:1fr; }
+    .two-col{ grid-template-columns:1fr; }
+  }
+
+  /* in-the-wild examples */
+  .examples{ display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; }
+  @media (max-width:900px){ .examples{ grid-template-columns:1fr; } }
+  .example{
+    border-radius:18px; overflow:hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    display:flex; flex-direction:column;
+    min-height: 320px;
+  }
+  /* chat widget */
+  .ex-chat{ background:#fff; color:#0B0B14; }
+  .ex-chat .topbar{
+    padding:14px 16px; color:#fff;
+    background:linear-gradient(135deg,#6366F1,#8B5CF6,#EC4899);
+    display:flex; align-items:center; gap:10px;
+  }
+  .ex-chat .topbar pip-mascot{ width:36px; height:36px; }
+  .ex-chat .topbar .who{ display:flex; flex-direction:column; }
+  .ex-chat .topbar .who strong{ font-size:14px; }
+  .ex-chat .topbar .who span{ font-size:10px; opacity:.85; font-family:"JetBrains Mono", monospace; }
+  .ex-chat .msgs{ flex:1; padding:14px; display:flex; flex-direction:column; gap:8px; }
+  .ex-chat .bub{ max-width:80%; padding:8px 12px; border-radius:14px 14px 14px 4px; background:#F4ECFF; font-size:13px; }
+  .ex-chat .bub.user{ align-self:flex-end; border-radius:14px 14px 4px 14px; background:#0B0B14; color:#fff; }
+  .ex-chat .typing{
+    margin-top:6px; padding:10px 12px; border-radius:12px; background:#F4ECFF;
+    display:flex; align-items:center; gap:10px;
+  }
+  .ex-chat .typing pip-mascot{ width:32px; height:32px; }
+  .ex-chat .typing span{ font-family:"JetBrains Mono", monospace; font-size:11px; color:#5b3aa8; }
+
+  /* empty state */
+  .ex-empty{ background:#F4ECFF; color:#0B0B14; padding:24px; align-items:center; justify-content:center; gap:10px; }
+  .ex-empty pip-mascot{ width:180px; height:180px; }
+  .ex-empty h4{ margin:0; font-size:18px; }
+  .ex-empty p{ margin:0; font-size:13px; color:#3a3a55; text-align:center; }
+  .ex-empty .pri{
+    margin-top:8px; padding:10px 16px; border-radius:99px; border:none; cursor:pointer; font-weight:700; font-size:13px;
+    background:linear-gradient(135deg,#6366F1,#8B5CF6,#EC4899); color:#fff;
+  }
+
+  /* success */
+  .ex-success{
+    background: radial-gradient(120% 80% at 100% 0%, #2a1342 0%, #0c0a1a 60%, #07060f 100%);
+    color:#fff; padding:24px; align-items:center; justify-content:center; gap:10px;
+  }
+  .ex-success pip-mascot{ width:200px; height:200px; }
+  .ex-success h4{ margin:0; font-size:18px; }
+  .ex-success p{ margin:0; font-size:13px; color:rgba(255,255,255,.7); text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>&lt;pip-mascot&gt; <span class="tag">v1.0 · drop-in</span></h1>
+    <p class="lead">
+      Self-contained Web Component — one JS file, zero dependencies. Works in plain HTML, React, Vue, Angular, Svelte, anywhere. Six poses, all animated, all on-brand.
+    </p>
+  </header>
+
+  <!-- ===================== 1 · Hero ===================== -->
+  <section>
+    <div class="head">
+      <span class="num">1</span>
+      <h2>Try it</h2>
+      <span class="mono">live · click a pose</span>
+    </div>
+
+    <div class="hero">
+      <div class="hero-left">
+        <pip-mascot id="hero" pose="wave" size="280"></pip-mascot>
+      </div>
+      <div class="hero-right">
+        <h3>Play with all six poses</h3>
+        <div class="controls" id="poseBtns"></div>
+
+        <div class="row" style="margin-top:8px;">
+          <label>Speed</label>
+          <input type="range" id="speed" min="0.3" max="2.5" step="0.1" value="1">
+          <span class="val" id="speedVal">1×</span>
+        </div>
+        <div class="row">
+          <label>Size</label>
+          <input type="range" id="size"  min="80" max="360" step="10" value="280">
+          <span class="val" id="sizeVal">280</span>
+        </div>
+        <div class="row">
+          <button class="btn" id="autoBtn">Auto-cycle</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 2 · All poses ===================== -->
+  <section>
+    <div class="head">
+      <span class="num">2</span>
+      <h2>All six poses</h2>
+      <span class="mono">each runs independently</span>
+    </div>
+
+    <div class="grid">
+      <div class="card"><pip-mascot pose="wave"></pip-mascot><div class="name">Wave</div><div class="attr">pose="wave"</div></div>
+      <div class="card"><pip-mascot pose="think"></pip-mascot><div class="name">Think</div><div class="attr">pose="think"</div></div>
+      <div class="card"><pip-mascot pose="point"></pip-mascot><div class="name">Point</div><div class="attr">pose="point"</div></div>
+      <div class="card"><pip-mascot pose="celebrate"></pip-mascot><div class="name">Celebrate</div><div class="attr">pose="celebrate"</div></div>
+      <div class="card"><pip-mascot pose="sleep"></pip-mascot><div class="name">Sleep</div><div class="attr">pose="sleep"</div></div>
+      <div class="card"><pip-mascot pose="oops"></pip-mascot><div class="name">Oops</div><div class="attr">pose="oops"</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== 3 · In context ===================== -->
+  <section>
+    <div class="head">
+      <span class="num">3</span>
+      <h2>In context</h2>
+      <span class="mono">real product surfaces</span>
+    </div>
+
+    <div class="examples">
+      <!-- chat widget -->
+      <div class="example ex-chat">
+        <div class="topbar">
+          <pip-mascot pose="wave" no-shadow></pip-mascot>
+          <div class="who"><strong>Pip · SellPilot</strong><span>● Online · replies instantly</span></div>
+        </div>
+        <div class="msgs">
+          <div class="bub">Hey 👋 What are you shopping for?</div>
+          <div class="bub user">running shoes, under 150€</div>
+          <div class="typing">
+            <pip-mascot pose="think" no-shadow speed="1.2"></pip-mascot>
+            <span>Pip is finding matches…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- empty state -->
+      <div class="example ex-empty">
+        <pip-mascot pose="sleep"></pip-mascot>
+        <h4>Your cart is napping.</h4>
+        <p>Tap Pip and tell me what you're after.</p>
+        <button class="pri">Ask Pip</button>
+      </div>
+
+      <!-- success -->
+      <div class="example ex-success">
+        <pip-mascot pose="celebrate"></pip-mascot>
+        <h4>Order placed!</h4>
+        <p>I'll ping you when it ships.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 4 · Integration ===================== -->
+  <section>
+    <div class="head">
+      <span class="num">4</span>
+      <h2>Integration</h2>
+      <span class="mono">copy · paste · ship</span>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="mono" style="margin-bottom:6px;">Plain HTML</div>
+<pre><span class="c">&lt;!-- include once --&gt;</span>
+<span class="k">&lt;script</span> <span class="t">src</span>=<span class="s">"pip-mascot.js"</span><span class="k">&gt;&lt;/script&gt;</span>
+
+<span class="c">&lt;!-- use anywhere --&gt;</span>
+<span class="k">&lt;pip-mascot</span> <span class="t">pose</span>=<span class="s">"wave"</span> <span class="t">size</span>=<span class="s">"160"</span><span class="k">&gt;&lt;/pip-mascot&gt;</span>
+<span class="k">&lt;pip-mascot</span> <span class="t">pose</span>=<span class="s">"celebrate"</span><span class="k">&gt;&lt;/pip-mascot&gt;</span>
+<span class="k">&lt;pip-mascot</span> <span class="t">autocycle</span>=<span class="s">"3000"</span><span class="k">&gt;&lt;/pip-mascot&gt;</span></pre>
+
+        <div class="mono" style="margin:14px 0 6px;">React</div>
+<pre><span class="c">// index.html: include the script once</span>
+<span class="c">// component:</span>
+<span class="k">export function</span> <span class="t">Mascot</span>({ pose }) {
+  <span class="k">return</span> &lt;<span class="t">pip-mascot</span> <span class="t">pose</span>={pose}&gt;&lt;/<span class="t">pip-mascot</span>&gt;;
+}</pre>
+
+      </div>
+
+      <div>
+        <div class="mono" style="margin-bottom:6px;">Imperative API</div>
+<pre><span class="k">const</span> el = document.querySelector(<span class="s">'pip-mascot'</span>);
+
+<span class="c">// change pose</span>
+el.pose = <span class="s">'celebrate'</span>;
+
+<span class="c">// cycle through some poses</span>
+el.cycle([<span class="s">'wave'</span>, <span class="s">'think'</span>, <span class="s">'point'</span>], <span class="s">2500</span>);
+el.stopCycle();
+
+<span class="c">// listen for changes</span>
+el.addEventListener(<span class="s">'pose-change'</span>, <span class="t">e</span> =&gt; {
+  console.log(e.detail.pose);
+});</pre>
+
+        <div class="mono" style="margin:14px 0 6px;">Attributes</div>
+<pre><span class="t">pose</span>       <span class="c">wave | think | point | celebrate | sleep | oops</span>
+<span class="t">size</span>       <span class="c">number (px) or any CSS length</span>
+<span class="t">speed</span>      <span class="c">0.3–3 — animation speed multiplier</span>
+<span class="t">autocycle</span>  <span class="c">ms between auto pose changes</span>
+<span class="t">no-shadow</span>  <span class="c">hide ground shadow ellipse</span></pre>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="pip-mascot.js"></script>
+<script>
+  // wire up the playground
+  const hero = document.getElementById('hero');
+  const poses = ['wave','think','point','celebrate','sleep','oops'];
+  const btnRow = document.getElementById('poseBtns');
+  let autoOn = false;
+
+  poses.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'btn' + (p === hero.pose ? ' active' : '');
+    b.textContent = p;
+    b.onclick = () => {
+      hero.pose = p;
+      hero.stopCycle();
+      autoOn = false;
+      document.getElementById('autoBtn').classList.remove('active');
+      [...btnRow.children].forEach(c => c.classList.toggle('active', c.textContent === p));
+    };
+    btnRow.appendChild(b);
+  });
+
+  const speed = document.getElementById('speed');
+  const speedVal = document.getElementById('speedVal');
+  speed.oninput = () => {
+    hero.setAttribute('speed', speed.value);
+    speedVal.textContent = parseFloat(speed.value).toFixed(1) + '×';
+  };
+
+  const size = document.getElementById('size');
+  const sizeVal = document.getElementById('sizeVal');
+  size.oninput = () => {
+    hero.setAttribute('size', size.value);
+    sizeVal.textContent = size.value;
+  };
+
+  const autoBtn = document.getElementById('autoBtn');
+  autoBtn.onclick = () => {
+    autoOn = !autoOn;
+    autoBtn.classList.toggle('active', autoOn);
+    if (autoOn) {
+      hero.cycle(poses, 2800);
+      hero.addEventListener('pose-change', onChange);
+    } else {
+      hero.stopCycle();
+      hero.removeEventListener('pose-change', onChange);
+    }
+  };
+  function onChange(e){
+    [...btnRow.children].forEach(c => c.classList.toggle('active', c.textContent === e.detail.pose));
+  }
+</script>
+</body>
+</html>

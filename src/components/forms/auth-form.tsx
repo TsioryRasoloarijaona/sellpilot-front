@@ -62,18 +62,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center px-4 py-10">
-      <div className="absolute right-5 top-5">
+    <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
+      <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
-          <Logo className="text-xl" />
+      <div className="w-full max-w-sm">
+        <div className="mb-7 flex justify-center">
+          <Logo />
         </div>
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">{copy.title}</CardTitle>
-            <p className="text-sm leading-6 text-muted-foreground">{copy.subtitle}</p>
+        <Card className="shadow-md">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-xl">{copy.title}</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</p>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={onSubmit}>
@@ -118,7 +118,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             </form>
             <p className="mt-6 text-center text-sm text-muted-foreground">
               {mode === "login" ? "New to SellPilot?" : "Already have an account?"}{" "}
-              <Link className="font-medium text-blue-600 hover:underline" href={mode === "login" ? "/auth/register" : "/auth/login"}>
+              <Link className="font-medium text-primary hover:underline" href={mode === "login" ? "/auth/register" : "/auth/login"}>
                 {mode === "login" ? "Create an account" : "Login"}
               </Link>
             </p>

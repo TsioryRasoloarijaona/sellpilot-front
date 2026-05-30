@@ -25,14 +25,26 @@ const config: Config = {
         }
       },
       borderRadius: {
-        "2xl": "1rem"
+        "2xl": "0.875rem",
+        "3xl": "1.25rem"
       },
       boxShadow: {
-        soft: "0 20px 60px -28px rgba(15, 23, 42, 0.35)",
-        glow: "0 24px 80px -32px rgba(99, 102, 241, 0.65)"
+        soft:      "0 1px 4px -1px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.04)",
+        md:        "0 4px 20px -4px rgba(15,23,42,0.12), 0 0 0 1px rgba(15,23,42,0.05)",
+        glow:      "0 0 0 1px rgba(99,102,241,0.18), 0 8px 32px -8px rgba(79,70,229,0.42)",
+        "glow-sm": "0 4px 14px -4px rgba(79,70,229,0.35)"
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "ui-sans-serif", "system-ui"]
+      },
+      keyframes: {
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to:   { opacity: "1", transform: "translateY(0)" }
+        }
+      },
+      animation: {
+        "fade-up": "fade-up 0.3s ease-out both"
       }
     }
   },

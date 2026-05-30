@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
 import { EmptyState, PageHeader } from "./dashboard-shell";
 
 const STATUS_FILTERS = ["all", "pending", "processing", "delivered", "cancelled"] as const;
@@ -68,15 +69,12 @@ function ShopOrdersSection({ shop, orders, filter, query }: {
     });
   }, [orders, query, filter]);
 
-  if (!filtered.length) return null;
+  if (!filtered.length) return (
+    <p className="py-12 text-center text-sm text-muted-foreground">No orders match the current filters.</p>
+  );
 
   return (
     <div className="mb-8">
-      <div className="mb-3 flex items-center gap-2">
-        <Store className="h-4 w-4 text-muted-foreground" />
-        <h2 className="font-semibold">{shop.name}</h2>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{filtered.length}</span>
-      </div>
       <div className="overflow-hidden rounded-2xl border bg-card shadow-soft">
         <div className="hidden grid-cols-[1.2fr_0.9fr_1.2fr_1.4fr_0.7fr_0.9fr_0.9fr_1fr] gap-4 border-b px-5 py-3 text-xs font-medium uppercase tracking-widest text-muted-foreground xl:grid">
           <span>Customer</span>
@@ -131,6 +129,7 @@ function ShopOrdersSection({ shop, orders, filter, query }: {
 export function OrdersManager() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [activeShopId, setActiveShopId] = useState<string | null>(null);
 
   const { data: shops = mockShops } = useQuery({ queryKey: ["shops"], queryFn: shopsApi.listMine });
 
@@ -147,11 +146,45 @@ export function OrdersManager() {
     orders: shopQueries[i]?.data?.orders ?? (shop.id === mockShops[0].id ? mockOrders : [])
   }));
 
+  const selectedId = activeShopId ?? shopGroups[0]?.shop.id ?? null;
+  const activeGroup = shopGroups.find((g) => g.shop.id === selectedId);
+
   const hasAnyOrders = shopGroups.some((g) => g.orders.length > 0);
 
   return (
     <>
       <PageHeader title="Orders" description="All orders across your shops, grouped by store." />
+
+      {/* Shop tabs */}
+      {shops.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2 border-b pb-4">
+          {shopGroups.map(({ shop, orders }) => {
+            const isActive = shop.id === selectedId;
+            return (
+              <button
+                key={shop.id}
+                onClick={() => setActiveShopId(shop.id)}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                )}
+              >
+                <Store className="h-3.5 w-3.5" />
+                {shop.name}
+                <span className={cn(
+                  "rounded-full px-1.5 py-0.5 text-xs",
+                  isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-background text-muted-foreground"
+                )}>
+                  {orders.length}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <Card className="mb-5">
         <CardContent className="flex flex-col gap-3 p-4 md:flex-row">
           <div className="relative flex-1">
@@ -166,12 +199,10 @@ export function OrdersManager() {
         </CardContent>
       </Card>
 
-      {!hasAnyOrders ? (
+      {!hasAnyOrders || !activeGroup ? (
         <EmptyState title="No orders yet" text="Orders placed through your shops will appear here, grouped by store." />
       ) : (
-        shopGroups.map(({ shop, orders }) => (
-          <ShopOrdersSection key={shop.id} shop={shop} orders={orders} filter={filter} query={query} />
-        ))
+        <ShopOrdersSection shop={activeGroup.shop} orders={activeGroup.orders} filter={filter} query={query} />
       )}
     </>
   );

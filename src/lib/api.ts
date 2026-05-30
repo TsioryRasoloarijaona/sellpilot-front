@@ -71,7 +71,15 @@ export const shopsApi = {
     const { data } = await api.patch<Shop>(`/api/shops/${shopId}`, payload);
     return data;
   },
-  delete: (shopId: string) => api.delete(`/api/shops/${shopId}`)
+  delete: (shopId: string) => api.delete(`/api/shops/${shopId}`),
+  uploadLogo: async (shopId: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await api.put<Shop>(`/api/shops/${shopId}/logo`, form, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return data;
+  }
 };
 
 export const productsApi = {
@@ -92,6 +100,14 @@ export const productsApi = {
     const form = new FormData();
     form.append("image", image);
     const { data } = await api.patch<Product>(`/api/shops/${shopId}/products/${productId}/image`, form, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return data;
+  },
+  import: async (shopId: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await api.post<Record<string, unknown>>(`/api/shops/${shopId}/products/import`, form, {
       headers: { "Content-Type": "multipart/form-data" }
     });
     return data;

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ClipboardList, MapPin, Package, Phone, RefreshCcw, Send, ShoppingBag, Store, X } from "lucide-react";
+import { ChevronRight, ClipboardList, LayoutGrid, MapPin, Package, Phone, RefreshCcw, Search, Send, ShoppingBag, Store, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
@@ -59,6 +59,9 @@ export function PublicChat({ shopId }: { shopId: string }) {
   const [form, setForm] = useState<OrderForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<OrderForm>>({});
   const [showOrders, setShowOrders] = useState(false);
+  const [showProducts, setShowProducts] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+  const [celebrating, setCelebrating] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const { data: shop = mockShops.find((item) => item.id === shopId) || mockShops[0] } = useQuery({ queryKey: ["shop", shopId], queryFn: () => shopsApi.get(shopId) });
@@ -108,6 +111,8 @@ export function PublicChat({ shopId }: { shopId: string }) {
     onSuccess: () => {
       toast.success("Order placed! The shop will contact you shortly.");
       closeDialog();
+      setCelebrating(true);
+      setTimeout(() => setCelebrating(false), 3000);
     },
     onError: (error) => toast.error(getApiError(error))
   });
@@ -162,8 +167,12 @@ export function PublicChat({ shopId }: { shopId: string }) {
       <header className="sticky top-0 z-20 border-b bg-card/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 text-white">
-              <Store className="h-5 w-5" />
+            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 text-white">
+              {shop.logo_url ? (
+                <Image src={shop.logo_url} alt={shop.name} fill className="object-cover" />
+              ) : (
+                <Store className="h-5 w-5" />
+              )}
             </div>
             <div>
               <h1 className="font-semibold">{shop.name}</h1>
@@ -174,6 +183,14 @@ export function PublicChat({ shopId }: { shopId: string }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="outline"
+              aria-label="Browse products"
+              onClick={() => setShowProducts(true)}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
             <Button
               size="icon"
               variant="outline"
@@ -230,7 +247,7 @@ export function PublicChat({ shopId }: { shopId: string }) {
                   </div>
                 ) : !ordersData?.orders.length ? (
                   <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-                    <Package className="h-10 w-10 text-muted-foreground/50" />
+                    <pip-mascot pose="sleep" size="200" no-shadow="" suppressHydrationWarning />
                     <p className="font-medium">No orders yet</p>
                     <p className="text-sm text-muted-foreground">Your orders will appear here after you place one.</p>
                   </div>
@@ -247,6 +264,123 @@ export function PublicChat({ shopId }: { shopId: string }) {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showProducts && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowProducts(false)}
+            />
+            <motion.aside
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col bg-card shadow-2xl"
+            >
+              <div className="flex h-14 shrink-0 items-center justify-between border-b px-5">
+                <div className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-semibold">All Products</span>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {products.length}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowProducts(false)}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="shrink-0 border-b px-4 py-3">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="search"
+                    placeholder="Search products…"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    className="w-full rounded-xl border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                {(() => {
+                  const visible = products.filter((p) =>
+                    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+                    p.category.toLowerCase().includes(productSearch.toLowerCase())
+                  );
+                  if (!visible.length) {
+                    return (
+                      <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                        <p className="font-medium">No products found</p>
+                        <p className="text-sm text-muted-foreground">Try a different search term.</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-3">
+                      {visible.map((product) => (
+                        <div key={product.id} className="overflow-hidden rounded-2xl border bg-background shadow-soft">
+                          {product.image ? (
+                            <Image
+                              src={product.image}
+                              alt={product.name}
+                              width={400}
+                              height={160}
+                              className="h-36 w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-36 items-center justify-center bg-muted">
+                              <ShoppingBag className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="p-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate font-semibold">{product.name}</p>
+                                <p className="text-xs text-muted-foreground">{product.category} · {product.brand}</p>
+                              </div>
+                              <Badge variant={product.available ? "success" : "muted"}>
+                                {product.available ? "In stock" : "Sold out"}
+                              </Badge>
+                            </div>
+                            <div className="mt-2 flex items-center justify-between">
+                              <div>
+                                <p className="font-bold">{formatCurrency(product.price)}</p>
+                                <p className="text-xs text-muted-foreground">{product.delivery_time}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{product.stock} left</p>
+                            </div>
+                            <Button
+                              className="mt-3 w-full"
+                              disabled={!product.available}
+                              onClick={() => {
+                                openDialog(product);
+                                setShowProducts(false);
+                              }}
+                            >
+                              <ShoppingBag className="h-4 w-4" /> Quick buy
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       <section className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4">
         <div className="flex-1 space-y-5 py-6">
           {messages.length === 0 && !chatMutation.isPending && (
@@ -255,9 +389,7 @@ export function PublicChat({ shopId }: { shopId: string }) {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center gap-6 pt-10 text-center"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 shadow-glow">
-                <Store className="h-8 w-8 text-white" />
-              </div>
+              <pip-mascot pose="wave" size="220" speed="0.9" suppressHydrationWarning />
               <div>
                 <h2 className="text-lg font-semibold">{shop.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">How can I help you today?</p>
@@ -293,7 +425,7 @@ export function PublicChat({ shopId }: { shopId: string }) {
               >
                 <div className={`max-w-[88%] ${message.role === "customer" ? "sm:max-w-[70%]" : "sm:max-w-[78%]"}`}>
                   <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    {message.role === "ai" ? <Image src="/bubble.svg" alt="AI" width={14} height={14} /> : null}
+                    {message.role === "ai" ? <Image src="/cursor.svg" alt="AI" width={14} height={14} /> : null}
                     {message.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </div>
                   <div
@@ -313,16 +445,26 @@ export function PublicChat({ shopId }: { shopId: string }) {
             ))}
           </AnimatePresence>
           {chatMutation.isPending ? (
-            <div className="flex justify-start">
-              <div className="rounded-2xl border bg-card px-4 py-3 shadow-soft">
-                <div className="flex gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:120ms]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:240ms]" />
-                </div>
+            <div className="flex justify-start items-end gap-2">
+              <pip-mascot pose="think" size="100" no-shadow="" speed="1.2" suppressHydrationWarning />
+              <div className="rounded-2xl border bg-card px-4 py-2.5 shadow-soft text-xs text-muted-foreground italic">
+                thinking…
               </div>
             </div>
           ) : null}
+          <AnimatePresence>
+            {celebrating && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.7 }}
+                className="flex flex-col items-center gap-2 py-4"
+              >
+                <pip-mascot pose="celebrate" size="200" no-shadow="" speed="1.3" suppressHydrationWarning />
+                <p className="text-sm font-medium text-violet-600 dark:text-violet-400">Order confirmed!</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div ref={bottomRef} />
         </div>
 
@@ -491,24 +633,30 @@ function detectProducts(text: string, products: Product[], active?: string | nul
 
 function ProductCards({ products, onBuy }: { products: Product[]; onBuy: (product: Product) => void }) {
   return (
-    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-      {products.map((product) => (
-        <div key={product.id} className="overflow-hidden rounded-2xl border bg-card shadow-soft">
-          <Image src={product.image} alt={product.name} width={420} height={220} className="h-32 w-full object-cover" />
-          <div className="p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold">{product.name}</p>
-                <p className="text-sm text-muted-foreground">{formatCurrency(product.price)} · {product.delivery_time}</p>
+    <div className="mt-3">
+      <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+        <pip-mascot pose="point" size="64" no-shadow="" speed="1.1" suppressHydrationWarning />
+        <span>Here's what I found for you</span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {products.map((product) => (
+          <div key={product.id} className="overflow-hidden rounded-2xl border bg-card shadow-soft">
+            <Image src={product.image} alt={product.name} width={420} height={220} className="h-32 w-full object-cover" />
+            <div className="p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{product.name}</p>
+                  <p className="text-sm text-muted-foreground">{formatCurrency(product.price)} · {product.delivery_time}</p>
+                </div>
+                <Badge variant={product.available ? "success" : "muted"}>{product.available ? "In stock" : "Sold out"}</Badge>
               </div>
-              <Badge variant={product.available ? "success" : "muted"}>{product.available ? "In stock" : "Sold out"}</Badge>
+              <Button className="mt-3 w-full" disabled={!product.available} onClick={() => onBuy(product)}>
+                <ShoppingBag className="h-4 w-4" /> Quick buy
+              </Button>
             </div>
-            <Button className="mt-3 w-full" disabled={!product.available} onClick={() => onBuy(product)}>
-              <ShoppingBag className="h-4 w-4" /> Quick buy
-            </Button>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

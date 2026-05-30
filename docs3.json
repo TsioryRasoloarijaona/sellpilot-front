@@ -498,6 +498,58 @@
         }
       }
     },
+    "/api/shops/{shop_id}/logo": {
+      "put": {
+        "tags": [
+          "shops"
+        ],
+        "summary": "Update Shop Logo",
+        "operationId": "update_shop_logo_api_shops__shop_id__logo_put",
+        "parameters": [
+          {
+            "name": "shop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Shop Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_shop_logo_api_shops__shop_id__logo_put"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/shops/{shop_id}/products": {
       "post": {
         "tags": [
@@ -575,6 +627,61 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductListWithShopResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shops/{shop_id}/products/import": {
+      "post": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Import Products",
+        "description": "Bulk-import products from a CSV or XLSX file.",
+        "operationId": "import_products_api_shops__shop_id__products_import_post",
+        "parameters": [
+          {
+            "name": "shop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Shop Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_products_api_shops__shop_id__products_import_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Import Products Api Shops  Shop Id  Products Import Post"
                 }
               }
             }
@@ -1903,6 +2010,20 @@
         ],
         "title": "AuthResponse"
       },
+      "Body_import_products_api_shops__shop_id__products_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_products_api_shops__shop_id__products_import_post"
+      },
       "Body_update_product_image_api_shops__shop_id__products__product_id__image_patch": {
         "properties": {
           "image": {
@@ -1916,6 +2037,20 @@
           "image"
         ],
         "title": "Body_update_product_image_api_shops__shop_id__products__product_id__image_patch"
+      },
+      "Body_update_shop_logo_api_shops__shop_id__logo_put": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_update_shop_logo_api_shops__shop_id__logo_put"
       },
       "CategoryCreate": {
         "properties": {
@@ -3089,8 +3224,15 @@
             "title": "Session Id"
           },
           "product_id": {
-            "type": "string",
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Product Id"
           },
           "quantity": {
@@ -3098,6 +3240,20 @@
             "minimum": 1,
             "title": "Quantity",
             "default": 1
+          },
+          "items": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OrderItemCreate"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Items"
           },
           "customer_info": {
             "anyOf": [
@@ -3175,11 +3331,8 @@
           }
         },
         "type": "object",
-        "required": [
-          "product_id"
-        ],
         "title": "PublicOrderCreate",
-        "description": "Single-product order format used by the LangGraph chatbot."
+        "description": "Order format used by the LangGraph chatbot."
       },
       "ShopCreate": {
         "properties": {
@@ -3228,6 +3381,17 @@
             ],
             "title": "Payment"
           },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -3266,6 +3430,17 @@
           "delivery": {
             "type": "string",
             "title": "Delivery"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
           },
           "created_at": {
             "type": "string",

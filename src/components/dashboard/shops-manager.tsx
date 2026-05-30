@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes, Copy, ExternalLink, MoreHorizontal, Pencil, Plus, QrCode, Trash2 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { Boxes, Camera, Copy, ExternalLink, Loader2, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { FormEvent, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { shopsApi } from "@/lib/api";
@@ -15,6 +16,50 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/form";
 import { EmptyState, PageHeader } from "./dashboard-shell";
+
+function ShopLogoUpload({ shop }: { shop: Shop }) {
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => shopsApi.uploadLogo(shop.id, file),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<Shop[]>(["shops"], (prev = []) =>
+        prev.map((s) => (s.id === updated.id ? updated : s))
+      );
+      toast.success("Logo updated");
+    },
+    onError: (e) => toast.error(getApiError(e))
+  });
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadMutation.mutate(file);
+    e.target.value = "";
+  }
+
+  return (
+    <div
+      className="relative flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border bg-muted transition hover:ring-2 hover:ring-primary"
+      onClick={() => inputRef.current?.click()}
+      title="Upload logo"
+    >
+      {uploadMutation.isPending ? (
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      ) : shop.logo_url ? (
+        <>
+          <Image src={shop.logo_url} alt={shop.name} fill className="object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition hover:opacity-100">
+            <Camera className="h-4 w-4 text-white" />
+          </div>
+        </>
+      ) : (
+        <Camera className="h-5 w-5 text-muted-foreground" />
+      )}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  );
+}
 
 export function ShopsManager() {
   const queryClient = useQueryClient();
@@ -48,12 +93,15 @@ export function ShopsManager() {
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {data.map((shop) => (
-            <Card key={shop.id} className="transition hover:-translate-y-1 hover:shadow-glow">
+            <Card key={shop.id} className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardTitle>{shop.name}</CardTitle>
-                    <p className="mt-1 text-sm text-muted-foreground">{shop.delivery}</p>
+                  <div className="flex items-start gap-3">
+                    <ShopLogoUpload shop={shop} />
+                    <div>
+                      <CardTitle>{shop.name}</CardTitle>
+                      <p className="mt-1 text-sm text-muted-foreground">{shop.delivery}</p>
+                    </div>
                   </div>
                   <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                 </div>
@@ -79,7 +127,7 @@ export function ShopsManager() {
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" onClick={() => copyUrl(shop.id)}><Copy className="h-4 w-4" /> Copy URL</Button>
                   <Button asChild variant="outline"><Link href={`/shop/${shop.id}`}><ExternalLink className="h-4 w-4" /> Open Chat</Link></Button>
-                  <Button asChild variant="primary"><Link href={`/dashboard/shops/${shop.id}`}><Boxes className="h-4 w-4" /> View Products</Link></Button>
+                  <Button asChild><Link href={`/dashboard/shops/${shop.id}`}><Boxes className="h-4 w-4" /> View Products</Link></Button>
                   <Button variant="secondary" onClick={() => { setEditing(shop); setOpen(true); }}><Pencil className="h-4 w-4" /> Edit</Button>
                   <Button variant="destructive" onClick={() => deleteMutation.mutate(shop.id)}><Trash2 className="h-4 w-4" /> Delete</Button>
                 </div>

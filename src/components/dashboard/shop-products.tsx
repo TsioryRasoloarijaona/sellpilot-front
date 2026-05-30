@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Filter, ImagePlus, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { ArrowLeft, Filter, ImagePlus, Pencil, Plus, Search, Trash2, Upload } from "lucide-react";
+import { FormEvent, useRef, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { productsApi, shopsApi } from "@/lib/api";
 import { mockProducts } from "@/lib/mock-data";
@@ -44,6 +44,7 @@ export function ShopProducts({ shopId }: { shopId: string }) {
   const [category, setCategory] = useState("All");
   const [editing, setEditing] = useState<Product | null>(null);
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Fetch shop details
   const { data: shop } = useQuery({
@@ -98,9 +99,14 @@ export function ShopProducts({ shopId }: { shopId: string }) {
         title="Products"
         description="Manage products in this shop."
         action={
-          <Button onClick={() => { setEditing(null); setOpen(true); }}>
-            <Plus className="h-4 w-4" /> Add Product
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4" /> Import CSV / XLSX
+            </Button>
+            <Button onClick={() => { setEditing(null); setOpen(true); }}>
+              <Plus className="h-4 w-4" /> Add Product
+            </Button>
+          </div>
         }
       />
 
@@ -204,7 +210,150 @@ export function ShopProducts({ shopId }: { shopId: string }) {
       {open ? (
         <ProductDialog shopId={shopId} product={editing} onClose={() => setOpen(false)} />
       ) : null}
+      {importOpen ? (
+        <ImportDialog shopId={shopId} onClose={() => setImportOpen(false)} />
+      ) : null}
     </>
+  );
+}
+
+const IMPORT_COLUMNS = [
+  { name: "name",          type: "text",    required: true,  note: "max 160 chars" },
+  { name: "price",         type: "number",  required: true,  note: "≥ 0" },
+  { name: "description",   type: "text",    required: true,  note: "" },
+  { name: "category",      type: "text",    required: true,  note: "max 100 chars" },
+  { name: "stock",         type: "integer", required: true,  note: "≥ 0" },
+  { name: "delivery_time", type: "text",    required: true,  note: "e.g. 2-3 days" },
+  { name: "brand",         type: "text",    required: true,  note: "max 120 chars" },
+  { name: "available",     type: "boolean", required: false, note: "true / false (default: true)" },
+  { name: "variants",      type: "text",    required: false, note: "comma-separated, e.g. S,M,L" },
+];
+
+function ImportDialog({ shopId, onClose }: { shopId: string; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: (f: File) => productsApi.import(shopId, f),
+    onSuccess: (data) => {
+      setResult(data);
+      queryClient.invalidateQueries({ queryKey: ["products", shopId] });
+      toast.success("Products imported successfully");
+    },
+    onError: (error: unknown) => toast.error(getApiError(error))
+  });
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = e.target.files?.[0] ?? null;
+    setFile(picked);
+    setResult(null);
+  }
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!file) return toast.error("Please select a CSV or XLSX file");
+    mutation.mutate(file);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/45 p-4">
+      <Card className="mx-auto my-8 w-full max-w-2xl">
+        <CardHeader>
+          <CardTitle>Import Products</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Upload a CSV or XLSX file to bulk-import products into this shop.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-5" onSubmit={submit}>
+            {/* Column reference */}
+            <div className="rounded-xl border bg-muted/40 p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Required column headers
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs text-muted-foreground">
+                      <th className="pb-2 pr-4 font-medium">Column</th>
+                      <th className="pb-2 pr-4 font-medium">Type</th>
+                      <th className="pb-2 pr-4 font-medium">Required</th>
+                      <th className="pb-2 font-medium">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {IMPORT_COLUMNS.map((col) => (
+                      <tr key={col.name} className="border-b last:border-0">
+                        <td className="py-1.5 pr-4 font-mono text-xs font-semibold">{col.name}</td>
+                        <td className="py-1.5 pr-4 text-muted-foreground">{col.type}</td>
+                        <td className="py-1.5 pr-4">
+                          {col.required ? (
+                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                              required
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                              optional
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-1.5 text-xs text-muted-foreground">{col.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                The first row must be the header row with exact column names as shown above.
+              </p>
+            </div>
+
+            {/* File picker */}
+            <div
+              className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 p-8 transition hover:border-primary hover:bg-muted/40"
+              onClick={() => inputRef.current?.click()}
+            >
+              <Upload className="h-8 w-8 text-muted-foreground" />
+              {file ? (
+                <p className="text-sm font-medium">{file.name}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Click to select a file</p>
+              )}
+              <p className="text-xs text-muted-foreground">Supported: .csv, .xlsx</p>
+              <input
+                ref={inputRef}
+                type="file"
+                accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                className="hidden"
+                onChange={handleFile}
+              />
+            </div>
+
+            {result ? (
+              <div className="rounded-xl bg-muted p-3 text-sm">
+                <p className="font-medium text-green-600">Import complete</p>
+                <pre className="mt-1 overflow-x-auto text-xs text-muted-foreground">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </div>
+            ) : null}
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={onClose}>
+                {result ? "Close" : "Cancel"}
+              </Button>
+              {!result ? (
+                <Button disabled={!file || mutation.isPending}>
+                  {mutation.isPending ? "Importing..." : "Import"}
+                </Button>
+              ) : null}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

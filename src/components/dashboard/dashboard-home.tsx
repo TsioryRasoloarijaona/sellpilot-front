@@ -40,14 +40,14 @@ export function DashboardHome() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {stats.map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardContent className="flex items-center justify-between p-5">
                 <div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="mt-2 text-2xl font-semibold">{isLoading ? "..." : stat.value}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{stat.label}</p>
+                  <p className="mt-1.5 text-2xl font-bold tracking-tight">{isLoading ? "–" : stat.value}</p>
                 </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/15 to-violet-500/15 text-violet-500">
-                  <stat.icon className="h-5 w-5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <stat.icon className="h-5 w-5 text-primary" />
                 </div>
               </CardContent>
             </Card>
